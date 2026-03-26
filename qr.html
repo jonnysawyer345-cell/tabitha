@@ -45,18 +45,17 @@
       justify-content:center;
       margin:8px 0 18px;
     }
+
     .qr{
       width:min(340px, 92%);
-      aspect-ratio: 1 / 1;
-      background:#fff;
+      aspect-ratio:1/1;
       border:1px solid #e5e7eb;
       border-radius:14px;
       overflow:hidden;
+      position:relative;
       box-shadow:0 2px 6px rgba(0,0,0,0.08);
-      display:flex;
-      align-items:center;
-      justify-content:center;
     }
+
     .qr img{
       width:100%;
       height:100%;
@@ -64,14 +63,50 @@
       display:block;
     }
 
+    /* overlay blur + fade */
+    .overlay{
+      position:absolute;
+      inset:0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:rgba(255,255,255,0.7);
+      backdrop-filter:blur(6px);
+      z-index:2;
+      transition:opacity 0.4s ease;
+    }
+
+    /* green circle */
+    .loader{
+      width:110px;
+      height:110px;
+      background:#2e7d1f;
+      border-radius:50%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+
+    /* white spinning arc */
+    .loader::after{
+      content:"";
+      width:50px;
+      height:50px;
+      border:6px solid rgba(255,255,255,0.7);
+      border-top:6px solid transparent;
+      border-radius:50%;
+      animation:spin 1s linear infinite;
+    }
+
+    @keyframes spin{
+      to{transform:rotate(360deg);}
+    }
+
     .expires{
       text-align:center;
       font-size:18px;
       font-weight:800;
       margin:8px 0 18px;
-    }
-    .expires span{
-      font-weight:800;
     }
 
     .desc{
@@ -94,6 +129,17 @@
       line-height:1.6;
     }
     li{margin:6px 0}
+
+    .expires{
+  text-align:center;
+  font-size:18px;
+  font-weight:800;
+  margin:8px 0 18px;
+
+  opacity:0;              /* hidden at start */
+  transition:opacity 0.4s ease;
+}
+
   </style>
 </head>
 
@@ -101,16 +147,16 @@
   <div class="app">
     <header class="top">
       <div class="title">Verify Licence</div>
-      <!-- change href back to whatever page has the Reveal button -->
       <a class="close" href="#" id="closeBtn">Close</a>
-
     </header>
 
     <div class="content">
       <div class="qr-wrap">
         <div class="qr">
-          <!-- Replace with your QR image file -->
-          <img src="qr.png" alt="QR Code">
+          <img src="IMG_1375.jpeg" alt="QR Code" id="qrImg">
+          <div class="overlay" id="overlay">
+            <div class="loader"></div>
+          </div>
         </div>
       </div>
 
@@ -136,24 +182,50 @@
   </div>
 
   <script>
-    // simple countdown (starts at 1:57)
-    let seconds = 1 * 60 + 57;
-    const el = document.getElementById("timer");
+  // start at 2:00
+  let seconds = 2 * 60;
+  const el = document.getElementById("timer");
 
-    function render() {
-      const m = String(Math.floor(seconds / 60)).padStart(2, "0");
-      const s = String(seconds % 60).padStart(2, "0");
-      el.textContent = `${m}:${s}`;
-    }
+  function render() {
+    const m = String(Math.floor(seconds / 60)).padStart(2, "0");
+    const s = String(seconds % 60).padStart(2, "0");
+    el.textContent = `${m}:${s}`;
+  }
 
-    render();
+  render();
+
+  let timerStarted = false;
+
+  function startTimer() {
+    if (timerStarted) return;
+    timerStarted = true;
+
     setInterval(() => {
       if (seconds > 0) seconds--;
       render();
     }, 1000);
+  }
+
+ const overlay = document.getElementById("overlay");
+const expires = document.querySelector(".expires");
+
+setTimeout(() => {
+  overlay.style.opacity = "0";
+
+  setTimeout(() => {
+    overlay.style.display = "none";
+
+    // show timer text
+    expires.style.opacity = "1";
+
+    startTimer(); // start countdown AFTER showing
+  }, 400);
+
+}, 1500);
+
+  // close button routing
   const params = new URLSearchParams(window.location.search);
   const from = params.get("from");
-
   const closeBtn = document.getElementById("closeBtn");
 
   if (from === "permit") {
@@ -163,10 +235,6 @@
   } else if (from === "age") {
     closeBtn.href = "age.html";
   } else {
-    // fallback
     closeBtn.href = "index.html";
   }
-  
-  </script>
-</body>
-</html>
+</script>
